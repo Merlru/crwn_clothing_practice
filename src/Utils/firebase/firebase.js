@@ -1,9 +1,10 @@
 import { initializeApp } from "firebase/app";
 import {
     getAuth,
-    signInWithRedirect,
+    // signInWithRedirect,
     signInWithPopup,
-    GoogleAuthProvider
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword
 } from 'firebase/auth';
 import {
     getFirestore,
@@ -25,18 +26,30 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
-const provider = new GoogleAuthProvider();
+// ผู้ให้บริการ (google, facebook, twitter, etc...)
+const googleProvider = new GoogleAuthProvider();
 
-provider.setCustomParameters({
+googleProvider.setCustomParameters({
     prompt: "select_account"
 });
 
+// getAuth จะ return object มีข้อมูลเกี่ยวกับ auth
 export const auth = getAuth();
-export const signInWithGooglePopup = () => signInWithPopup(auth, provider);
 
+// สร้าง function ที่เรียก function signInWithPopup(auth, provider)
+export const signInWithGooglePopup = () => 
+    signInWithPopup(auth, googleProvider);
+// สร้าง function ที่เรียก function signInWithRedirect(auth, provider)
+// export const signInWithGoogleRedirect = () =>
+//     signInWithRedirect(auth, googleProvider);
+
+// firestore database
 export const db = getFirestore();
 
-export const createUserDocumentFromAuth = async (userAuth) => {
+export const createUserDocumentFromAuth = async (
+    userAuth, 
+    additionalInfo = {}
+    ) => {
     const userDocRef = doc(db, 'users', userAuth.uid);
 
     const userSnapshot = await getDoc(userDocRef);
@@ -51,12 +64,19 @@ export const createUserDocumentFromAuth = async (userAuth) => {
             await setDoc(userDocRef, {
                 displayName,
                 email,
-                createdAt
+                createdAt,
+                ...additionalInfo
             });
         } catch(err) {
             console.log('error creating the user', err.message);
-        }
-    }
+        };
+    };
 
     return userDocRef;
+};
+
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+    if (!email || !password) return;
+    
+    return await createUserWithEmailAndPassword(auth, email, password);
 };
