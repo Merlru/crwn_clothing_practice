@@ -19,8 +19,6 @@ const SignInForm = () => {
     const [ formFields, setFormFields ] = useState(defaultFormFields);
     const { email, password } = formFields;
 
-    console.log(formFields);
-
     const resetFormFields = () => {
         setFormFields(defaultFormFields);
     };
@@ -29,8 +27,7 @@ const SignInForm = () => {
         event.preventDefault();
         
         try {
-            const response = await signInAuthUserWithEmailAndPassword(email, password);
-            console.log(response);
+            await signInAuthUserWithEmailAndPassword(email, password);
             resetFormFields();
         } catch(error) {
             switch(error.code) {
@@ -40,8 +37,10 @@ const SignInForm = () => {
                 case 'auth/user-not-found':
                     alert('User not found, sign up first');
                     break;
+                case 'auth/popup-closed-by-user':
+                    alert('Google sign in popup closed');
+                    break;
                 default :
-                    alert('Error');
                     console.log(error);
                 };
         };
@@ -54,8 +53,7 @@ const SignInForm = () => {
     };
 
     const loginWithGoogle = async () => {
-        const { user } = await signInWithGooglePopup();
-        await createUserDocumentFromAuth(user);
+        await signInWithGooglePopup();
     };
 
     return (
